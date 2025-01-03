@@ -6,9 +6,8 @@ parameter LEN_WIDTH     = 'd4
 reg                           clk         ;
 reg                           rst_n       ;
 reg  [DATA_WIDTH     - 1 : 0] data_in     ;
-reg  [LEN_WIDTH      - 1 : 0] len_data    ; 
 reg                           req         ;
-reg                           dir_transfer;
+reg  [DATA_WIDTH     - 1 : 0] address     ;
 wire                          ack         ;
 wire                          sclk        ;
 wire                          mosi        ;
@@ -31,41 +30,42 @@ initial begin
 	@(negedge rst_n);
 	@(posedge rst_n);
 	@(posedge clk);
-	make_req('h17, 'd8, 2, 'd1);
-	make_req('h16, 'd8, 30, 'd1);
-	make_req('h15, 'd8, 0, 'd1);
-	make_req('h14, 'd8, 0, 'd0);
-	make_req('h13, 'd8, 0, 'd0);
-	make_req('h12, 'd8, 50, 'd0);
+	make_req('h40, 'd0, 2);
+	make_req('h1, 'd1, 5);
+	make_req('h15, 'd8, 0);
+	make_req('h14, 'd8, 0);
+	make_req('h13, 'd8, 0);
+	make_req('h12, 'd8, 0);
+	make_req('h11, 'd8, 0);
+	make_req('h10, 'd8, 0);
+	make_req('h09, 'd3, 5);
 end
 
-task make_req(input [DATA_WIDTH - 1 : 0] data_sent, input [LEN_WIDTH - 1 : 0] len_data_send, input int delay, input direction);
+task make_req(input [DATA_WIDTH - 1 : 0] data_sent, input [DATA_WIDTH - 1 : 0] address_sent , input int delay);
 	begin
 		repeat(delay) @(posedge clk);
 		req <= 'd1;
 		data_in <= data_sent;
-		len_data <= len_data_send;
-		dir_transfer <= direction;
+		address <= address_sent;
+		//dir_transfer <= direction;
 		@(negedge ack);
 		req <= 'd0;
 		data_in <= 'hx;
-		len_data <= 'hx;
+		address <= 'hx;
 	end
 endtask
 
 spi_master #(
 .DATA_WIDTH    (DATA_WIDTH  ),
 .LEN_WIDTH     (LEN_WIDTH   ),
-.DIVIDER_CLK   ('d2         ),
-.PHASE_CLK     ('d0         ),
-.POLARITY_CLK  ('d0         )
+.FIFO_DEPTH    (            ),
+.DIVIDER_CLK   (            )
 )i_spi_master(
 .clk           (clk         ), 
 .rst_n         (rst_n       ), 
 .req           (req         ), 
-.dir_transfer  (dir_transfer), 
-.len_data      (len_data    ), 
 .data_in       (data_in     ), 
+.address       (address     ),
 .miso          (            ), 
 .ack           (ack         ), 
 .sclk          (sclk        ), 
